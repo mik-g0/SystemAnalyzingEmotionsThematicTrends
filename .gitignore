@@ -1,0 +1,22 @@
+# ML / data
+*.pkl
+*.pt
+*.h5
+models/
+data/
+amazon_review_polarity_csv/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
