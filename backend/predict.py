@@ -1,6 +1,6 @@
 import os
 from transformers import pipeline
-from topic_engine import get_topic
+from backend.topic_engine import get_topic
 
 BASE_DIR = os.path.dirname(__file__)
 
