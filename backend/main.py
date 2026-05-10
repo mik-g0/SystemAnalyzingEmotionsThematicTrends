@@ -90,8 +90,8 @@ from backend.auth import get_current_user
 from fastapi import Depends
 
 
-@app.post("/analyze")
-def analyze(req: AnalyzeRequest, user=Depends(get_current_user)):
+@app.post("/analysis")
+def analysis(req: AnalyzeRequest, user=Depends(get_current_user)):
     result = predict(req.text)
 
     save_analysis(

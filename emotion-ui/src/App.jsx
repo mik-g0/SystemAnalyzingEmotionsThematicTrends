@@ -5,6 +5,8 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import Analysis from "./pages/Analysis";
 import History from "./pages/History";
 import Trends from "./pages/Trends";
@@ -19,40 +21,48 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* PRIVATE (личный кабинет) */}
+      {/* PRIVATE */}
       <Route
         path="/analysis"
         element={
-          <Layout>
-            <Analysis />
-          </Layout>
+          <ProtectedRoute>
+            <Layout>
+              <Analysis />
+            </Layout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/history"
         element={
-          <Layout>
-            <History />
-          </Layout>
+          <ProtectedRoute>
+            <Layout>
+              <History />
+            </Layout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/trends"
         element={
-          <Layout>
-            <Trends />
-          </Layout>
+          <ProtectedRoute>
+            <Layout>
+              <Trends />
+            </Layout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/about"
         element={
-          <Layout>
-            <About />
-          </Layout>
+          <ProtectedRoute>
+            <Layout>
+              <About />
+            </Layout>
+          </ProtectedRoute>
         }
       />
 

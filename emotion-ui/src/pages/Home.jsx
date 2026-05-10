@@ -4,6 +4,11 @@ import AuthCard from "../components/AuthCard";
 
 
 export default function Home() {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    return <Navigate to="/analysis" />;
+  }
   return (
     <div style={pageStyle}>
       <AuthCard>

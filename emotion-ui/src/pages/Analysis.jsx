@@ -3,26 +3,31 @@ import { pageStyle } from "../styles/ui";
 import AuthCard from "../components/AuthCard";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import { apiRequest } from "../api/client";
 
 export default function Analysis() {
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
 
-  const handleAnalyze = async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:8000/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
-      });
+    const handleAnalyze = async () => {
+      try {
+        const user_id = localStorage.getItem("user_id");
 
-      const data = await res.json();
-      setResult(data);
+        const res = await apiRequest("/analysis", {
+          method: "POST",
+          body: JSON.stringify({
+            text,
+            user_id
+          }),
+        });
 
-    } catch (err) {
-      console.log("ERROR:", err);
-    }
-  };
+        const data = await res.json();
+        setResult(data);
+
+      } catch (err) {
+        console.log("ERROR:", err);
+      }
+    };
 
   return (
     <div style={pageStyle}>

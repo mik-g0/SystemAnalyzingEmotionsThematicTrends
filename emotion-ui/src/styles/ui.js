@@ -18,6 +18,15 @@ export const cardStyle = {
   boxShadow: "0 20px 60px rgba(0,0,0,0.6)",
 };
 
+export const textLarge = {
+  fontSize: "20px"
+};
+
+export const titleLarge = {
+  fontSize: "32px",
+  fontWeight: 600
+};
+
 export const inputStyle = {
   width: "96%",
   padding: "16px 14px",
@@ -29,7 +38,6 @@ export const inputStyle = {
   color: "#e6eaf2",
   outline: "none",
   fontSize: 23,
-
    display: "block",
 };
 
@@ -47,9 +55,9 @@ export const buttonStyle = {
 };
 
 export const linkStyle = {
-  fontSize: 21,
+  fontSize: 25,
   padding: 5,
-  marginTop: 30,
+  marginTop: 10,
   color: "#8aa4ff",
   textDecoration: "none",
 };
