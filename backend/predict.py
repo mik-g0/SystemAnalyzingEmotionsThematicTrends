@@ -1,42 +1,51 @@
-import joblib
-from bertopic import BERTopic
-from backend.topic_labels import TOPIC_LABELS
 import os
-import joblib
-
+from transformers import pipeline
+from topic_engine import get_topic
 
 BASE_DIR = os.path.dirname(__file__)
-MODEL_DIR = os.path.join(BASE_DIR, "models")
 
-# загрузка моделей
-emotion_model = joblib.load(os.path.join(MODEL_DIR, "emotion_model.pkl"))
-vectorizer = joblib.load(os.path.join(MODEL_DIR, "vectorizer.pkl"))
-topic_model = BERTopic.load(os.path.join(MODEL_DIR, "bertopic_model"))
+print("Loading models...")
+
+emotion_pipe = pipeline(
+    "text-classification",
+    model="j-hartmann/emotion-english-distilroberta-base",
+    top_k=1
+)
+
+def safe_text(text):
+    if text is None:
+        return ""
+    return str(text).strip()
 
 
 def predict(text):
-    # эмоция
-    emotion = emotion_model.predict(vectorizer.transform([text]))[0]
+    text = safe_text(text)
 
-    # тема
-    topic_id, _ = topic_model.transform([text])
-    topic_id = topic_id[0]
+    if not text:
+        return {
+            "text": text,
+            "emotion": "unknown",
+            "topic": "empty"
+        }
+
+    emotion = emotion_pipe(text)[0][0]["label"]
+    topic = get_topic(text)
 
     return {
         "text": text,
         "emotion": emotion,
-        "topic_id": int(topic_id),
-        "topic": TOPIC_LABELS.get(topic_id, "Unknown")
+        "topic": topic
     }
 
 
-# тесты
-tests = [
-    "I love my family and friends",
-    "This is terrible and stressful",
-    "Thank you so much for help",
-    "Work is exhausting and I hate it",
-]
+if __name__ == "__main__":
+    tests = [
+        "I feel exhausted because of work and deadlines",
+        "My family supports me and I love them",
+        "I am worried about money and bills",
+        "I enjoy programming and building software",
+        "I feel anxious and depressed lately"
+    ]
 
-for t in tests:
-    print(predict(t))
+    for t in tests:
+        print(predict(t))
