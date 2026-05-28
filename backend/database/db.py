@@ -1,12 +1,16 @@
-import sqlite3
-from pathlib import Path
-
-DB_PATH = Path(__file__).resolve().parent / "app.db"
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(
+        dbname="emotion_analysis",
+        user="postgres",
+        password="postgres",
+        host="localhost",
+        port="5432",
+        cursor_factory=RealDictCursor
+    )
     return conn
 
 
@@ -16,21 +20,21 @@ def init_db():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS analyses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         text TEXT NOT NULL,
         emotion TEXT,
         topic TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
 

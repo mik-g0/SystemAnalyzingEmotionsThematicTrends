@@ -7,7 +7,7 @@ def save_analysis(user_id: int, text: str, emotion: str, topic: str):
 
     cur.execute("""
         INSERT INTO analyses (user_id, text, emotion, topic)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (user_id, text, emotion, topic))
 
     conn.commit()
@@ -21,9 +21,9 @@ def get_history(user_id: int, limit: int = 20):
     cur.execute("""
         SELECT text, emotion, topic, created_at
         FROM analyses
-        WHERE user_id = ?
+        WHERE user_id = %s
         ORDER BY created_at DESC
-        LIMIT ?
+        LIMIT %s
     """, (user_id, limit))
 
     rows = cur.fetchall()

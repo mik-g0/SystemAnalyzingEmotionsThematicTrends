@@ -6,7 +6,7 @@ def create_user(email: str, password_hash: str):
     cur = conn.cursor()
 
     cur.execute(
-        "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+        "INSERT INTO users (email, password_hash) VALUES (%s, %s)",
         (email, password_hash)
     )
 
@@ -19,7 +19,7 @@ def get_user_by_email(email: str):
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT * FROM users WHERE email = ?",
+        "SELECT * FROM users WHERE email = %s",
         (email,)
     )
 

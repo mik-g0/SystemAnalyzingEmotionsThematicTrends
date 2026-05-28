@@ -8,7 +8,7 @@ print("Loading models...")
 
 emotion_pipe = pipeline(
     "text-classification",
-    model="j-hartmann/emotion-english-distilroberta-base",
+    model="j-hartmann/emotion-english-distilroberta-base", #предобученная модель из HuggingFace
     top_k=1
 )
 
