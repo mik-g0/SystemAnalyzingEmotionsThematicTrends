@@ -1,6 +1,8 @@
 import os
 from transformers import pipeline
 from backend.topic_engine import get_topic
+from deep_translator import GoogleTranslator
+
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -18,6 +20,17 @@ def safe_text(text):
     return str(text).strip()
 
 
+def translate_to_english(text):
+    try:
+        return GoogleTranslator(source='auto', target='en').translate(text)
+    except Exception:
+        return text
+
+
+def is_english(text):
+    return all(ord(c) < 128 for c in text)
+
+
 def predict(text):
     text = safe_text(text)
 
@@ -28,7 +41,12 @@ def predict(text):
             "topic": "empty"
         }
 
-    emotion = emotion_pipe(text)[0][0]["label"]
+    if not is_english(text):
+        text_en = translate_to_english(text)
+    else:
+        text_en = text
+
+    emotion = emotion_pipe(text_en)[0][0]["label"]
     topic = get_topic(text)
 
     return {

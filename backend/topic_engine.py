@@ -2,18 +2,20 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-# лёгкая модель эмбеддингов
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 
-# фиксированные темы (их можно расширять)
+
 TOPICS = {
-    "work_stress": "work job deadlines stress boss pressure burnout",
-    "family": "family parents children love relationship support home",
-    "money": "money finance salary debt bills expenses poverty",
-    "technology": "technology software programming computers AI internet",
-    "health": "health anxiety depression tired illness pain hospital",
-    "entertainment": "movies music games entertainment fun leisure",
-    "social": "friends social communication relationships talk people"
+    "work": "work job my job career workplace office tasks work stress deadlines boss burnout",
+    "family": "family parents children relationships marriage home support love",
+    "money": "finance salary debts bills investments savings income economy",
+    "technology": "technology software programming AI internet computers smartphone applications",
+    "health": "health illness anxiety depression stress hospital medicine therapy",
+    "education": "school university studying exams homework learning science",
+    "entertainment": "movies music games hobbies leisure fun streaming books",
+    "social": "friends communication society people social interaction conversations",
+    "shopping": "shopping products delivery customer service purchase store refund",
+    "pets": "pets dogs cats animals veterinary care pet love"
 }
 
 topic_names = list(TOPICS.keys())
@@ -26,7 +28,7 @@ def get_topic(text):
 
     best = np.max(scores)
 
-    if best < 0.25:
+    if best < 0.35:
         return "unknown"
 
     idx = int(np.argmax(scores))
