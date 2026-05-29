@@ -30,8 +30,7 @@ export const titleLarge = {
 export const inputStyle = {
   width: "96%",
   padding: "16px 14px",
-  marginTop: 30,
-  marginTop: 12,
+  marginTop: 8,
   borderRadius: 12,
   border: "1px solid rgba(255,255,255,0.08)",
   background: "rgba(0,0,0,0.35)",

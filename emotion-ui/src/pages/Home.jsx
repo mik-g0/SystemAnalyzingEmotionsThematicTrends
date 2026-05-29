@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { pageStyle, linkStyle } from "../styles/ui";
 import AuthCard from "../components/AuthCard";
-
+import { Navigate } from "react-router-dom";
 
 export default function Home() {
   const token = localStorage.getItem("token");
