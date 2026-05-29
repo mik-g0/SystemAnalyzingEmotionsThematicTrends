@@ -29,3 +29,17 @@ def get_history(user_id: int, limit: int = 20):
     rows = cur.fetchall()
     conn.close()
     return rows
+
+def get_all_analyses():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT emotion, topic
+        FROM analyses
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows

@@ -7,9 +7,10 @@ from contextlib import asynccontextmanager
 
 from backend.database.db import init_db
 from backend.database.users import create_user, get_user_by_email
-from backend.database.analyses import save_analysis, get_history
+from backend.database.analyses import save_analysis, get_history, get_all_analyses
 from backend.utils.security import hash_password, verify_password, create_access_token
 from backend.predict import predict
+from collections import Counter
 
 
 # ---------------------------
@@ -121,6 +122,22 @@ def history(user=Depends(get_current_user)):
         for r in rows
     ]
 
+
+@app.get("/trends")
+def trends():
+    rows = get_all_analyses()
+
+    emotions = Counter(r["emotion"] for r in rows)
+    topics = Counter(r["topic"] for r in rows)
+
+    return {
+        "emotions": [
+            {"name": k, "count": v} for k, v in emotions.items()
+        ],
+        "topics": [
+            {"name": k, "count": v} for k, v in topics.items()
+        ]
+    }
 
 # ---------------------------
 # ROOT
