@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+import re
+from fastapi import FastAPI, UploadFile, File
 from backend.auth import get_current_user
 from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +10,9 @@ from backend.database.db import init_db
 from backend.database.users import create_user, get_user_by_email
 from backend.database.analyses import save_analysis, get_history, get_all_analyses
 from backend.utils.security import hash_password, verify_password, create_access_token
-from backend.predict import predict
+from backend.predict import predict, predict_batch
 from collections import Counter
+from backend.file_reader import extract_text
 
 
 # ---------------------------
@@ -24,6 +26,10 @@ class AuthRequest(BaseModel):
 
 class AnalyzeRequest(BaseModel):
     text: str
+
+
+class BatchAnalyzeRequest(BaseModel):
+    texts: list[str]
 
 
 # ---------------------------
@@ -84,12 +90,8 @@ def login(req: AuthRequest):
 
 
 # ---------------------------
-# ANALYSIS (ML)
+# ANALYSIS (ML) — один текст
 # ---------------------------
-
-from backend.auth import get_current_user
-from fastapi import Depends
-
 
 @app.post("/analysis")
 def analysis(req: AnalyzeRequest, user=Depends(get_current_user)):
@@ -103,6 +105,74 @@ def analysis(req: AnalyzeRequest, user=Depends(get_current_user)):
     )
 
     return result
+
+
+@app.post("/analysis/file")
+async def analyze_file(
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    try:
+        text = await extract_text(file)
+
+        result = predict(text)
+
+        save_analysis(
+            user["id"],
+            text[:5000],
+            result["emotion"],
+            result["topic"]
+        )
+
+        return result
+
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ---------------------------
+# BATCH ANALYSIS — массив текстов (комментарии)
+# ---------------------------
+
+@app.post("/analysis/batch")
+def analysis_batch(req: BatchAnalyzeRequest, user=Depends(get_current_user)):
+    result = predict_batch(req.texts)
+
+    if "results" in result:
+        for r in result["results"]:
+            save_analysis(user["id"], r["text"], r["emotion"], r["topic"])
+
+    return result
+
+
+@app.post("/analysis/file/batch")
+async def analyze_file_batch(
+    file: UploadFile = File(...),
+    user=Depends(get_current_user)
+):
+    try:
+        text = await extract_text(file)
+
+        # разбиваем на отдельные "комментарии": по строкам, отбрасывая пустые
+        lines = [line.strip() for line in text.split("\n") if line.strip()]
+
+        # если файл — это сплошная статья (мало строк, но длинные),
+        # дополнительно разбиваем по предложениям
+        if len(lines) < 3:
+            lines = re.split(r'(?<=[.!?])\s+', text.strip())
+            lines = [l.strip() for l in lines if l.strip()]
+
+        result = predict_batch(lines)
+
+        if "results" in result:
+            for r in result["results"]:
+                save_analysis(user["id"], r["text"][:5000], r["emotion"], r["topic"])
+
+        return result
+
+    except Exception as e:
+        return {"error": str(e)}
+
 
 # ---------------------------
 # HISTORY
