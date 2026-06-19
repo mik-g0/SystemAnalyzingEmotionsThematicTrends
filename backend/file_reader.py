@@ -3,7 +3,7 @@ import fitz
 import tempfile
 import csv
 import io
-
+import json
 
 # ---------------- TXT ----------------
 async def read_txt(file) -> str:
@@ -43,6 +43,27 @@ async def read_csv(file) -> str:
             lines.append(" ".join(cell.strip() for cell in row if cell.strip()))
 
     return "\n".join(l for l in lines if l)
+
+# ---------------- json ----------------
+async def read_json(file) -> str:
+    content = await file.read()
+    data = json.loads(content.decode("utf-8", errors="ignore"))
+
+    # Предполагаем, что внутри массив объектов или строк
+    if isinstance(data, list):
+        # Если это список строк
+        if all(isinstance(i, str) for i in data):
+            return "\n".join(data)
+        # If it's a list of dicts, try to find text keys
+        lines = []
+        for item in data:
+            if isinstance(item, dict):
+                for key in ("text", "comment", "message", "текст"):
+                    if key in item:
+                        lines.append(str(item[key]))
+                        break
+        return "\n".join(lines)
+    return str(data)
 
 
 # ---------------- DOCX ----------------

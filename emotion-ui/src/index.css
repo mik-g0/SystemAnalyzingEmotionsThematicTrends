@@ -1,122 +1,158 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-html, body {
+/* Полный сброс стилей */
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  background: #0b0f17;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 16px;
-  color: #e6eaf2;
 }
 
-/* убираем дефолтные стили */
-input, button {
-  font-family: inherit;
-  font-size: 16px;
+body {
+  background-color: #000000; /* Глубокий черный фон как на макете */
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+/* ГЛАВНОЕ ИЗМЕНЕНИЕ: Центрированный контейнер для всего приложения */
+.app-container {
   display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  max-width: 1220px; /* Идеальная общая ширина для Sidebar + Большого контента */
+  margin: 0 auto;    /* Автоматически создает благородные отступы по бокам экрана */
+  padding: 0 30px;
+  gap: 50px;         /* Фиксированный правильный зазор между меню и контентом */
+  width: 100%;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* Левая навигация (Панель меню) */
+.app-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  padding-top: 60px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+/* Строгий фирменный логотип 't' */
+.app-logo {
+  font-size: 44px;
+  font-family: "Georgia", serif;
+  font-weight: 900;
+  color: #ffffff;
+  margin-bottom: 35px;
+  padding-left: 12px;
+  text-transform: lowercase; /* В тамблере логотип с маленькой буквы */
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Навигационные ссылки */
+.nav-link {
+  display: flex;
+  align-items: center;
+  color: #8a98a5; /* Мягкий серый цвет */
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  transition: all 0.15s ease-in-out;
 }
 
-code {
+.nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+  color: #00b8ff;
+  background-color: rgba(0, 184, 255, 0.08);
+}
+
+/* ОСНОВНОЙ БЛОК: ТЕПЕРЬ ОН БОЛЬШОЙ И СПАЦИОЗНЫЙ */
+.app-content {
+  flex-grow: 1;
+  max-width: 900px; /* Существенно расширили рабочую область */
+  padding-top: 65px;
+  padding-bottom: 80px;
+}
+
+/* Премиальная карточка контента */
+.project-card {
+  background-color: #111315; /* Темно-серый благородный фон */
+  border: 1px solid #1f2226;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Типографика */
+.project-card h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 18px;
+  letter-spacing: -0.3px;
+}
+
+.project-card p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #cbd5e1;
+  margin-bottom: 25px;
+}
+
+/* Современные блоки списка */
+.project-list {
+  list-style: none;
+  margin-bottom: 35px;
+}
+
+.project-list li {
   font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  line-height: 1.6;
+  color: #94a3b8;
+  padding: 15px 20px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid #1f2226;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 3px solid #00b8ff; /* Тонкий стильный синий маркер */
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.project-list li:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(4px);
+}
+
+/* КРАСИВАЯ И СДЕРЖАННАЯ КНОПКА ВЫХОДА (БЕЗ КРАСНОТЫ) */
+.project-card button {
+  display: inline-block !important;
+  background-color: #1c1e22 !important; /* Матовый темный фон */
+  color: #94a3b8 !important;            /* Спокойный серый текст */
+  border: 1px solid #2d3139 !important;  /* Аккуратная тонкая рамка */
+  border-radius: 20px !important;        /* Закругленная форма в стиле оригинальных кнопок */
+  padding: 10px 28px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  width: auto !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Эффект при наведении на кнопку */
+.project-card button:hover {
+  background-color: #262930 !important;  /* Чуть более светлый графитовый оттенок */
+  border-color: #4f5666 !important;      /* Выделение рамки */
+  color: #ffffff !important;             /* Текст становится чисто белым */
+}
+
+/* Элементы управления на странице анализа */
+.project-card button[style*="background: rgb(28, 30, 34)"]:hover {
+  background-color: #262930 !important;
+  border-color: #4f5666 !important;
+}
+
+.project-card textarea:focus {
+  border-color: #00b8ff !important;
 }

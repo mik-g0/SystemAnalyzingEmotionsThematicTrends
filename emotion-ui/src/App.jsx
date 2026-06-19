@@ -15,57 +15,24 @@ import About from "./pages/About";
 export default function App() {
   return (
     <Routes>
-
-      {/* PUBLIC */}
+      {/* ПУБЛИЧНЫЕ СТРАНИЦЫ (без меню Tumblr) */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* PRIVATE */}
+      {/* ПРИВАТНЫЕ СТРАНИЦЫ (все защищены и обернуты в Tumblr Layout) */}
       <Route
-        path="/analysis"
         element={
           <ProtectedRoute>
-            <Layout>
-              <Analysis />
-            </Layout>
+            <Layout />
           </ProtectedRoute>
         }
-      />
-
-      <Route
-        path="/history"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <History />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/trends"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Trends />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/about"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <About />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-
+      >
+        <Route path="/analysis" element={<Analysis />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/trends" element={<Trends />} />
+        <Route path="/about" element={<About />} />
+      </Route>
     </Routes>
   );
 }

@@ -1,6 +1,10 @@
 from backend.database.db import get_connection
 
 
+# =========================
+# SAVE
+# =========================
+
 def save_analysis(user_id: int, text: str, emotion: str, topic: str):
     conn = get_connection()
     cur = conn.cursor()
@@ -14,7 +18,11 @@ def save_analysis(user_id: int, text: str, emotion: str, topic: str):
     conn.close()
 
 
-def get_history(user_id: int, limit: int = 20):
+# =========================
+# HISTORY (user-specific)
+# =========================
+
+def get_history(user_id: int):
     conn = get_connection()
     cur = conn.cursor()
 
@@ -23,21 +31,69 @@ def get_history(user_id: int, limit: int = 20):
         FROM analyses
         WHERE user_id = %s
         ORDER BY created_at DESC
-        LIMIT %s
-    """, (user_id, limit))
+    """, (user_id, ))
 
     rows = cur.fetchall()
     conn.close()
     return rows
 
+
+# =========================
+# ANALYTICS SOURCE (IMPORTANT FIX)
+# =========================
+
 def get_all_analyses():
     conn = get_connection()
     cur = conn.cursor()
 
+    # 🔥 FIX: обязательно включаем created_at
     cur.execute("""
-        SELECT emotion, topic
+        SELECT emotion, topic, created_at
         FROM analyses
+        WHERE created_at IS NOT NULL
     """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows
+
+
+# =========================
+# PERIOD FILTER (PostgreSQL FIXED)
+# =========================
+
+def get_analyses_by_period(days: int):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT emotion, topic, created_at
+        FROM analyses
+        WHERE created_at >= NOW() - INTERVAL '%s days'
+        ORDER BY created_at
+    """, (days,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows
+
+
+# =========================
+# DATE RANGE (PostgreSQL FIXED)
+# =========================
+
+def get_analyses_between_dates(from_date: str, to_date: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT emotion, topic, created_at
+        FROM analyses
+        WHERE created_at BETWEEN %s AND %s
+        ORDER BY created_at
+    """, (from_date, to_date))
 
     rows = cur.fetchall()
     conn.close()

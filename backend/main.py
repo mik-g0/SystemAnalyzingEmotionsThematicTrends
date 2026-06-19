@@ -5,16 +5,17 @@ from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
-
 from backend.database.db import init_db
 from backend.database.users import create_user, get_user_by_email
 from backend.database.analyses import save_analysis, get_history, get_all_analyses
 from backend.utils.security import hash_password, verify_password, create_access_token
 from backend.predict import predict, predict_batch
-from collections import Counter
 from backend.file_reader import extract_text
+from backend.trend_engine import build_trends
+from backend.database.analyses import get_analyses_by_period
 
-
+from datetime import datetime, timedelta
+from collections import Counter, defaultdict
 # ---------------------------
 # MODELS (request bodies)
 # ---------------------------
@@ -195,18 +196,152 @@ def history(user=Depends(get_current_user)):
 
 @app.get("/trends")
 def trends():
+    """
+    Возвращает:
+    - текущее распределение эмоций/тем
+    - эмоциональный индекс (0-100)
+    - динамику за последние 30 дней
+    - топ растущих тем
+    - всплески негатива
+    """
     rows = get_all_analyses()
 
+    if not rows:
+        return {
+            "emotions": [],
+            "topics": [],
+            "emotional_index": 50,
+            "timeline": {},
+            "top_growing_topics": [],
+            "alerts": []
+        }
+
+    # ---- текущее состояние (снимок) ----
     emotions = Counter(r["emotion"] for r in rows)
     topics = Counter(r["topic"] for r in rows)
 
+    emotion_dist = [
+        {"name": k, "count": v} for k, v in emotions.most_common()
+    ]
+
+    topic_dist = [
+        {"name": k, "count": v} for k, v in topics.most_common()
+    ]
+
+    # ---- эмоциональный индекс (0-100) ----
+    # 100 = все позитивные, 0 = все негативные, 50 = нейтрально
+    NEGATIVE_EMOTIONS = {"anger", "sadness", "fear", "disgust"}
+    POSITIVE_EMOTIONS = {"joy", "surprise"}
+
+    positive_count = sum(emotions.get(e, 0) for e in POSITIVE_EMOTIONS)
+    negative_count = sum(emotions.get(e, 0) for e in NEGATIVE_EMOTIONS)
+    total = len(rows)
+
+    if total > 0:
+        # Индекс: 100 * (позитив - негатив) / всего + 50
+        emotional_index = max(0, min(100, 50 + (50 * (positive_count - negative_count) / total)))
+    else:
+        emotional_index = 50
+
+    # ---- временная динамика (последние 30 дней по дням) ----
+    today = datetime.utcnow().date()
+    timeline = defaultdict(lambda: {"emotions": Counter(), "topics": Counter()})
+
+    for r in rows:
+        if r["created_at"]:
+            # r["created_at"] приходит как datetime или строка
+            if isinstance(r["created_at"], str):
+                date = datetime.fromisoformat(r["created_at"]).date()
+            else:
+                date = r["created_at"].date() if hasattr(r["created_at"], "date") else today
+
+            # учитываем только последние 30 дней
+            if (today - date).days <= 30:
+                timeline[str(date)]["emotions"][r["emotion"]] += 1
+                timeline[str(date)]["topics"][r["topic"]] += 1
+
+    # конвертируем в JSON-friendly формат
+    timeline_json = {}
+    for date_str in sorted(timeline.keys()):
+        timeline_json[date_str] = {
+            "emotions": dict(timeline[date_str]["emotions"]),
+            "topics": dict(timeline[date_str]["topics"])
+        }
+
+    # ---- топ растущих тем (негативный тренд) ----
+    # сравниваем: доля темы неделю назад vs сейчас
+    week_ago = today - timedelta(days=7)
+    recent_rows = [r for r in rows if (
+            (isinstance(r["created_at"], str) and datetime.fromisoformat(r["created_at"]).date() >= week_ago)
+            or (hasattr(r["created_at"], "date") and r["created_at"].date() >= week_ago)
+    )]
+    old_rows = [r for r in rows if (
+            (isinstance(r["created_at"], str) and datetime.fromisoformat(r["created_at"]).date() < week_ago)
+            or (hasattr(r["created_at"], "date") and r["created_at"].date() < week_ago)
+    )]
+
+    top_growing = []
+    if old_rows and recent_rows:
+        old_topics = Counter(r["topic"] for r in old_rows)
+        recent_topics = Counter(r["topic"] for r in recent_rows)
+
+        for topic in topics.keys():
+            old_ratio = old_topics.get(topic, 0) / len(old_rows) if old_rows else 0
+            recent_ratio = recent_topics.get(topic, 0) / len(recent_rows) if recent_rows else 0
+            growth = recent_ratio - old_ratio
+
+            if growth > 0:
+                top_growing.append({
+                    "topic": topic,
+                    "growth_pct": round(growth * 100, 1),
+                    "old_ratio": round(old_ratio * 100, 1),
+                    "recent_ratio": round(recent_ratio * 100, 1)
+                })
+
+        top_growing = sorted(top_growing, key=lambda x: x["growth_pct"], reverse=True)[:5]
+
+    # ---- всплески негатива ----
+    # дни, когда негатив выше среднего + есть заметный скачок
+    negative_by_day = defaultdict(int)
+    total_by_day = defaultdict(int)
+
+    for r in rows:
+        if r["created_at"]:
+            if isinstance(r["created_at"], str):
+                date = datetime.fromisoformat(r["created_at"]).date()
+            else:
+                date = r["created_at"].date() if hasattr(r["created_at"], "date") else today
+
+            if (today - date).days <= 30:
+                total_by_day[str(date)] += 1
+                if r["emotion"] in NEGATIVE_EMOTIONS:
+                    negative_by_day[str(date)] += 1
+
+    avg_negative_ratio = negative_count / total if total > 0 else 0
+
+    alerts = []
+    for date_str in sorted(negative_by_day.keys()):
+        if total_by_day[date_str] > 0:
+            ratio = negative_by_day[date_str] / total_by_day[date_str]
+            if ratio > avg_negative_ratio * 1.3:  # всплеск более чем на 30% от среднего
+                alerts.append({
+                    "date": date_str,
+                    "negative_ratio": round(ratio * 100, 1),
+                    "count": negative_by_day[date_str],
+                    "severity": "high" if ratio > 0.7 else "medium"
+                })
+
     return {
-        "emotions": [
-            {"name": k, "count": v} for k, v in emotions.items()
-        ],
-        "topics": [
-            {"name": k, "count": v} for k, v in topics.items()
-        ]
+        "emotions": emotion_dist,
+        "topics": topic_dist,
+        "emotional_index": round(emotional_index, 1),
+        "positive_ratio": round(positive_count / total * 100, 1) if total > 0 else 0,
+        "negative_ratio": round(negative_count / total * 100, 1) if total > 0 else 0,
+        "timeline": timeline_json,
+        "top_growing_topics": top_growing,
+        "alerts": alerts,
+        "total_analyzed": total,
+        "period": "last_30_days"
     }
 
 # ---------------------------
